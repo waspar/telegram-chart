@@ -1,0 +1,412 @@
+@keyframes y_scale1_anim_up {
+	0% {
+		transform: translateY(0);
+		opacity: 1
+	}
+	to {
+		transform: translateY(-42px);
+		opacity: 0
+	}
+}
+
+@keyframes y_scale2_anim_up {
+	0% {
+		transform: translateY(42px);
+		opacity: 0
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1
+	}
+}
+
+@keyframes y_scale1_anim_down {
+	0% {
+		transform: translateY(-42px);
+		opacity: 0
+	}
+	to {
+		transform: translateY(px);
+		opacity: 1
+	}
+}
+
+@keyframes y_scale2_anim_down {
+	0% {
+		transform: translateY(0);
+		opacity: 1
+	}
+	to {
+		transform: translateY(42px);
+		opacity: 0
+	}
+}
+
+@keyframes shake {
+	0% {
+		transform: translateX(-4px)
+	}
+	16.66% {
+		transform: translateX(4px)
+	}
+	33.33% {
+		transform: translateX(-2px)
+	}
+	50% {
+		transform: translateX(2px)
+	}
+	66.66% {
+		transform: translateX(-1px)
+	}
+	83.33% {
+		transform: translateX(1px)
+	}
+	to {
+		transform: translateX(0)
+	}
+}
+
+html {
+	height: 100%;
+	line-height: 1;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent
+}
+
+.chart, body {
+	position: relative;
+	box-sizing: border-box
+}
+
+body {
+	min-height: 100%;
+	margin: 0;
+	padding-bottom: 104px;
+	font: 16px HelveticaNeue-Light, Helvetica, sans-serif;
+	cursor: default
+}
+
+.chart .series, body.scrolling {
+	pointer-events: none
+}
+
+h2 {
+	margin: 0;
+	font-size: 20px
+}
+
+svg {
+	display: block
+}
+
+#cc {
+	display: flex;
+	justify-content: space-evenly;
+	flex-wrap: wrap
+}
+
+@supports (-ms-ime-align:auto) {
+	#cc {
+		justify-content: space-around
+	}
+}
+
+.chart {
+	flex: 0 0 auto;
+	width: 100%;
+	max-width: 500px;
+	padding: 20px;
+	overflow: hidden
+}
+
+.chart h2 {
+	height: 25px;
+	margin-bottom: 10px
+}
+
+.chart svg.main {
+	width: 100%;
+	height: 251px;
+	cursor: crosshair
+}
+
+.chart .series {
+	position: absolute;
+	top: 53px;
+	left: 19px;
+	width: calc(100% - 38px);
+	height: 254px
+}
+
+.y_scale {
+	animation: .2s forwards
+}
+
+.y_scale line {
+	stroke-width: 1px
+}
+
+.x_axis, .y_scale text {
+	font-size: 11px
+}
+
+.x_axis {
+	width: 100%;
+	height: 30px;
+	border-top: 1px solid;
+	text-anchor: middle
+}
+
+.cursor, .marker {
+	opacity: 0
+}
+
+.cursor {
+	stroke-width: 1px
+}
+
+.marker, .tooltip {
+	position: absolute;
+	pointer-events: none
+}
+
+.marker {
+	margin: 47px 0 0 14px;
+	stroke-width: 2px
+}
+
+.tooltip {
+	z-index: 1;
+	top: 50px;
+	border-radius: 5px;
+	padding: 10px;
+	opacity: 0;
+	transition: opacity .2s;
+	white-space: nowrap
+}
+
+.tooltip .date {
+	margin-bottom: 10px;
+	font-family: HelveticaNeue, Helvetica, sans-serif
+}
+
+.tooltip span {
+	display: inline-block;
+	margin-right: 20px;
+	font-size: 13px
+}
+
+.tooltip span:last-child {
+	margin: 0
+}
+
+.tooltip span b {
+	display: block;
+	font-size: 18px
+}
+
+.nav {
+	position: relative;
+	height: 50px;
+	overflow: hidden
+}
+
+.nav canvas {
+	width: 100%;
+	height: 100%
+}
+
+.nav .wrap {
+	position: absolute;
+	top: 0;
+	display: flex;
+	width: 100%;
+	height: 50px
+}
+
+.nav .overlay, .nav .window {
+	will-change: width
+}
+
+.nav .overlay {
+	z-index: 1
+}
+
+.nav .overlay.l {
+	width: 75.75%
+}
+
+.nav .window {
+	z-index: 0;
+	width: 24.25%;
+	border-style: solid;
+	border-width: 1px 4px;
+	box-sizing: border-box;
+	cursor: ew-resize
+}
+
+.legend {
+	margin-top: 10px;
+	padding: 0;
+	list-style: none;
+	font-size: 0
+}
+
+.legend i, .legend li {
+	display: inline-block;
+	border: 1px solid
+}
+
+.legend li {
+	margin: 5px 10px 0 0;
+	padding: 6px 12px 6px 6px;
+	font-size: 13px;
+	animation: .5s;
+	cursor: pointer;
+	border-radius: 17px
+}
+
+.legend i {
+	width: 20px;
+	height: 20px;
+	margin-right: 6px;
+	border-radius: 50%;
+	vertical-align: -7px;
+	transition: background-color .2s
+}
+
+.legend .on i {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpolyline points='18,33.5 25.5,41 42,24' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")
+}
+
+.legend .off i {
+	background-color: transparent !important
+}
+
+#mode_switch {
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: 200px;
+	margin: 40px 0 40px -100px;
+	text-align: center;
+	font-size: 20px;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer
+}
+
+.day #mode_switch .d, .night #mode_switch .n {
+	display: none
+}
+
+.note {
+	max-width: 430px;
+	margin: 20px auto 0;
+	padding: 0 20px;
+	text-align: center;
+	font-size: 11px;
+	line-height: 1.5
+}
+
+.day {
+	background: #fff;
+	color: #222
+}
+
+.day .y_scale line {
+	stroke: #f2f4f5
+}
+
+.day .x_axis, .day .y_scale text {
+	fill: #96a2aa
+}
+
+.day .x_axis {
+	border-color: #ecf0f3
+}
+
+.day .cursor {
+	stroke: rgba(191, 205, 213, .5)
+}
+
+.day .marker {
+	fill: #fff
+}
+
+.day .tooltip {
+	background: #fff;
+	box-shadow: rgba(0, 0, 0, .2) 0 1px 2px
+}
+
+.day .nav .overlay {
+	background: rgba(242, 247, 250, .75)
+}
+
+.day .nav .window {
+	border-color: rgba(185, 213, 231, .5)
+}
+
+.day .legend li {
+	border-color: #e6ecf0
+}
+
+.day #mode_switch {
+	color: #0e8be3
+}
+
+.day .note {
+	color: #999
+}
+
+.night {
+	background: #242f3e;
+	color: #fff
+}
+
+.night .y_scale line {
+	stroke: #283544
+}
+
+.night .x_axis, .night .y_scale text {
+	fill: #556778
+}
+
+.night .x_axis {
+	border-color: #313d4d
+}
+
+.night .cursor {
+	stroke: rgba(82, 101, 118, .5)
+}
+
+.night .marker {
+	fill: #242f3e
+}
+
+.night .tooltip {
+	background: #253241;
+	box-shadow: rgba(24, 33, 42, .5) 0 1px 2px
+}
+
+.night .nav .overlay {
+	background: rgba(30, 40, 54, .75)
+}
+
+.night .nav .window {
+	border-color: rgba(92, 125, 152, .5)
+}
+
+.night .legend li {
+	border-color: #354558
+}
+
+.night #mode_switch {
+	color: #35a8f1
+}
+
+.night .note {
+	color: #556778
+}

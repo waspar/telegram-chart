@@ -203,7 +203,8 @@ function TelegramChart(_container, _data, _options) {
 		line: 1 * s.ratio,
 		line_height: 45 * s.ratio,
 		circle: 3 * s.ratio,
-		font: 10 * s.ratio
+		font: 10 * s.ratio,
+		font_family: 'Arial'
 	};
 
 	// preview params
@@ -228,6 +229,7 @@ function TelegramChart(_container, _data, _options) {
 		},
 		y: {
 			height: 45 * s.ratio,
+			marginv: -5 * s.ratio,
 			count: 6,
 			names: [],
 			types: [],
@@ -391,12 +393,19 @@ function TelegramChart(_container, _data, _options) {
 
 	function renderGrid() {
 
+		renderLinesY();
+		renderTextY();
+		renderTextX();
+
+	}
+
+	function renderLinesY() {
+
 		ctx.lineJoin =  'bevel';
 		ctx.lineCap = 'butt';
 		ctx.globalAlpha = 1;
 		ctx.strokeStyle = theme.line;
 		ctx.lineWidth = main.line;
-
 
 		for (var i = 0; i < axis.y.count; i++) {
 
@@ -406,10 +415,25 @@ function TelegramChart(_container, _data, _options) {
 			ctx.lineTo(main.width, y);
 			ctx.stroke();
 
+		}
+	}
+
+	function renderTextY() {
+
+		for (var i = 0; i < axis.y.count; i++) {
+
+			var y = main.height - (axis.y.height * i) + axis.y.marginv;
 			var text = axis.y.min + axis.y.delta * i;
+
+			ctx.fillStyle = theme.text;
+			ctx.font = main.font+'px '+main.font_family;
 			ctx.fillText(utl.compressNumber(text, true), 0, y);
 
 		}
+
+	}
+
+	function renderTextX() {
 
 	}
 
@@ -454,7 +478,12 @@ function TelegramChart(_container, _data, _options) {
 		axis.x.count = Math.max(1, Math.floor(canvas.width / (axis.x.width * 2)));
 		axis.y.count = Math.max(1, Math.floor(main.height / axis.y.height));
 
+		console.log(data.x.max, data.x.min);
+		console.log(data.x.max -  data.x.min);
+		console.log(axis.x.count);
+		axis.x.delta = Math.round( (data.x.max - data.x.min) / axis.x.count);
 		axis.y.delta = Math.round(axis.y.max / axis.y.count);
+		console.log(axis.x.delta);
 
 	}
 	// \render

@@ -50,21 +50,28 @@ function TelegramChart(_container, _data, _options) {
 	// utilities
 	var utl = {
 
-		minmax: function(_arr, _ifrom, _ito){
-			var r = {min: false, max: false};
+		minmax: function (_arr, _ifrom, _ito) {
+			var r = {min: false, max: false, imin: false, imax: false};
 
-			if(_arr.length > 0){
+			if (_arr.length > 0) {
 
-				if(!_ifrom) _ifrom = 0; // Number.MIN_VALUE;
-				if(!_ito) _ito = _arr.length -1 ;// Number.MAX_VALUE;
+				if (!_ifrom) _ifrom = 0; // Number.MIN_VALUE;
+				if (!_ito) _ito = _arr.length - 1;// Number.MAX_VALUE;
 
 				r.min = _arr[_ifrom];
 				r.max = _arr[_ito];
+				r.imin = _ifrom;
+				r.imax = _ito;
 
 				for (var i = _ifrom; i <= _ito; i++) {
 					var v = _arr[i];
-					if (v < r.min) r.min = v;
-					else if (v > r.max) r.max = v;
+					if (v < r.min) {
+						r.min = v;
+						r.imin = i;
+					} else if (v > r.max) {
+						r.max = v;
+						r.imax = i;
+					}
 				}
 
 			}
@@ -72,7 +79,25 @@ function TelegramChart(_container, _data, _options) {
 			return r;
 		},
 
-		compressNumber : function(_n){
+		minmaxedge: function (_arr, _ifrom, _ito) {
+			var r = {min: false, max: false, imin: false, imax: false};
+
+			if (_arr.length > 0) {
+
+				if (!_ifrom) _ifrom = 0;
+				if (!_ito) _ito = _arr.length - 1;
+
+				r.min = _arr[_ifrom];
+				r.max = _arr[_ito];
+				r.imin = _ifrom;
+				r.imax = _ito;
+
+			}
+
+			return r;
+		},
+
+		compressNumber: function (_n) {
 			var abs = Math.abs(_n);
 
 			switch (true) {
@@ -93,7 +118,7 @@ function TelegramChart(_container, _data, _options) {
 
 		},
 
-		formatNumber : function (_n) {
+		formatNumber: function (_n) {
 
 			var abs = Math.abs(_n);
 			var n = abs.toFixed(0);
@@ -110,29 +135,29 @@ function TelegramChart(_container, _data, _options) {
 			return result;
 		},
 
-		formatDate : function (_t, _day) {
+		formatDate: function (_t, _day) {
 
 			var oDate = new Date(_t);
 			var result = '';
 
-			if (_day){
+			if (_day) {
 				result += loc.day[oDate.getDay()] + ', ';
 			}
 
 			return result += loc.month[oDate.getMonth()] + ' ' + oDate.getDate();
 		},
 
-		createElement : function(_parent, _tag, _classes, _attrs, _styles) {
+		createElement: function (_parent, _tag, _classes, _attrs, _styles) {
 			var el = document.createElement(_tag);
 
-			if(_classes) el.classList.add(_classes);
-			if(_attrs){
-				for (var attr in _attrs){
+			if (_classes) el.classList.add(_classes);
+			if (_attrs) {
+				for (var attr in _attrs) {
 					el.setAttribute(attr, _attrs[attr]);
 				}
 			}
-			if(_styles){
-				for (var style in _styles){
+			if (_styles) {
+				for (var style in _styles) {
 					el.style[style] = _styles[style]
 				}
 			}
@@ -141,7 +166,7 @@ function TelegramChart(_container, _data, _options) {
 			return el;
 		},
 
-		addEventListener: function(_el, event, listener) {
+		addEventListener: function (_el, event, listener) {
 			_el.addEventListener(event, listener, false);
 		},
 
@@ -161,7 +186,7 @@ function TelegramChart(_container, _data, _options) {
 	// elements
 	var e = {
 		h1: utl.createElement(_container, 'h1'),
-		canvas:  utl.createElement(_container, 'canvas'),
+		canvas: utl.createElement(_container, 'canvas'),
 		controls: utl.createElement(_container, 'div', 'controls'),
 		popup: utl.createElement(_container, 'div', 'popup', false, {'display': 'none'})
 	};
@@ -225,6 +250,7 @@ function TelegramChart(_container, _data, _options) {
 		x: {
 			width: 30 * s.ratio,
 			count: 6,
+			marginv: 16 * s.ratio,
 			name: null
 		},
 		y: {
@@ -247,7 +273,7 @@ function TelegramChart(_container, _data, _options) {
 
 	// api
 	this.switchTheme = function (_theme) {
-		if(_theme && def.themes.hasOwnProperty(_theme)){
+		if (_theme && def.themes.hasOwnProperty(_theme)) {
 			theme = def.themes[_theme];
 			draw.all = true;
 			return true;
@@ -255,10 +281,11 @@ function TelegramChart(_container, _data, _options) {
 		return false;
 	};
 	this.setData = function (charts) {
+		console.log('>setData');
 
 		zero();
 
-		for(var t in  charts.types){
+		for (var t in  charts.types) {
 			switch (charts.types[t]) {
 
 				case 'x':
@@ -284,6 +311,7 @@ function TelegramChart(_container, _data, _options) {
 				case (axis.x.name === column_name):
 					column = {
 						name: column_name,
+						data: charts.columns[c],
 						length: charts.columns[c].length - 1,
 						type: charts.types[column_name],
 						min: charts.columns[c][1],
@@ -297,15 +325,16 @@ function TelegramChart(_container, _data, _options) {
 					column = {
 						code: column_name,
 						name: charts.names[column_name],
+						data: charts.columns[c],
 						type: charts.types[column_name],
 						length: charts.columns[c].length - 1,
 						color: charts.colors[column_name]
 					};
-					var minmax = utl.minmax( charts.columns[c], 1);
+					var minmax = utl.minmax(charts.columns[c], 1);
 					column.min = minmax.min;
 					column.max = minmax.max;
-					if(axis.y.min > column.min) axis.y.min = column.min;
-					if(axis.y.max < column.max) axis.y.max = column.max;
+					if (axis.y.min > column.min) axis.y.min = column.min;
+					if (axis.y.max < column.max) axis.y.max = column.max;
 					data.y.push(column);
 					break;
 			}
@@ -318,33 +347,36 @@ function TelegramChart(_container, _data, _options) {
 	// \api
 
 
-
 	// common functions
 	function initDom() {
-		e.h1.innerText = _options.title ? _options.title :  'Chart';
+		e.h1.innerText = _options.title ? _options.title : 'Chart';
 	}
+
 	function zeroDom() {
 		// TODO remove all dom elements
 	}
+
 	function zeroData() {
 		data.x = {};
 		data.y = [];
 	}
+
 	function zero() {
 		zeroData();
 		zeroDom();
 	}
+
 	function init() {
+		console.log('>init');
 		initDom();
 	}
+
 	// \common functions
-
-
-
 
 
 	// render
 	function render(_t) {
+		console.log('>render');
 
 		resize();
 
@@ -361,11 +393,11 @@ function TelegramChart(_container, _data, _options) {
 			//ctx.strokeStyle = '#ff0000';
 			//ctx.stroke();
 
-			if(draw.main){
+			if (draw.main) {
 				renderMain();
 				draw.main = true;
 			}
-			if(draw.preview){
+			if (draw.preview) {
 				renderPreview();
 				draw.main = true;
 			}
@@ -376,18 +408,15 @@ function TelegramChart(_container, _data, _options) {
 		requestAnimationFrame(render);
 	}
 
-	function renderPreview(){
+	function renderPreview() {
 		ctx.clearRect(preview.rect[0], preview.rect[1], preview.rect[2], preview.rect[3]);
 		// TODO - tmp
 		ctx.fillStyle = '#d903ff';
 		ctx.fillRect(preview.rect[0], preview.rect[1], preview.rect[2], preview.rect[3]);
 	}
 
-	function renderMain(){
+	function renderMain() {
 		ctx.clearRect(main.rect[0], main.rect[1], main.rect[2], main.rect[3]);
-		// TODO - tmp
-		//ctx.fillStyle = '#41ff08';
-		//ctx.fillRect(main.rect[0], main.rect[1], main.rect[2], main.rect[3]);
 		renderGrid();
 	}
 
@@ -401,7 +430,7 @@ function TelegramChart(_container, _data, _options) {
 
 	function renderLinesY() {
 
-		ctx.lineJoin =  'bevel';
+		ctx.lineJoin = 'bevel';
 		ctx.lineCap = 'butt';
 		ctx.globalAlpha = 1;
 		ctx.strokeStyle = theme.line;
@@ -419,6 +448,8 @@ function TelegramChart(_container, _data, _options) {
 	}
 
 	function renderTextY() {
+		console.log('>renderTextY');
+		calcAxisY();
 
 		for (var i = 0; i < axis.y.count; i++) {
 
@@ -426,7 +457,7 @@ function TelegramChart(_container, _data, _options) {
 			var text = axis.y.min + axis.y.delta * i;
 
 			ctx.fillStyle = theme.text;
-			ctx.font = main.font+'px '+main.font_family;
+			ctx.font = main.font + 'px ' + main.font_family;
 			ctx.fillText(utl.compressNumber(text, true), 0, y);
 
 		}
@@ -434,16 +465,37 @@ function TelegramChart(_container, _data, _options) {
 	}
 
 	function renderTextX() {
+		console.log('>renderTextX');
+		var verbose = false;
+		calcAxisX();
+
+		var count = 0;
+		var offset = main.width;
+		for (var i = data.x.ito; i >= data.x.ifrom; i -= axis.x.delta) {
+			var value = data.x.data[i];
+			if(!value) continue;
+			if(count > 0){
+				offset -= Math.round((axis.x.delta * axis.x.interval_width));
+			}
+			if(verbose) console.log('offset - '+offset);
+			var x = Math.round(offset + (axis.x.width / 2));
+			if(verbose) console.log('x - '+x);
+			var y = main.height + axis.x.marginv;
+
+			ctx.fillText(utl.formatDate(value, false), x,  y);
+			count++;
+		}
 
 	}
 
 	function resize() {
+		console.log('>resize');
 
 		canvas.bounds = e.canvas.getBoundingClientRect();
 		var w = Math.round(canvas.bounds.width * s.ratio);
 		var h = Math.round(canvas.bounds.height * s.ratio);
 
-		if(canvas.width !== w && canvas.height !== h){
+		if (canvas.width !== w && canvas.height !== h) {
 
 			canvas.width = w;
 			canvas.height = h;
@@ -456,7 +508,12 @@ function TelegramChart(_container, _data, _options) {
 		}
 
 	}
-	function calc() {
+
+	// \render
+
+
+	// calculation
+	function calc() { // - common data calculation without limits (from/to)
 
 		main.height = canvas.height - preview.height - preview.mt;
 		main.width = preview.width = canvas.width;
@@ -475,21 +532,45 @@ function TelegramChart(_container, _data, _options) {
 			preview.height
 		];
 
-		axis.x.count = Math.max(1, Math.floor(canvas.width / (axis.x.width * 2)));
-		axis.y.count = Math.max(1, Math.floor(main.height / axis.y.height));
+	}
 
-		console.log(data.x.max, data.x.min);
-		console.log(data.x.max -  data.x.min);
-		console.log(axis.x.count);
-		axis.x.delta = Math.round( (data.x.max - data.x.min) / axis.x.count);
+	function calcAxisX(){
+		console.log('>calcAxisX');
+		setXFromTo(1, null); // TODO - limit here
+		axis.x.count = Math.max(1, Math.floor(canvas.width / (axis.x.width * 2)));
+		axis.x.interval = Math.abs(data.x.data[2] - data.x.data[1]);
+		axis.x.range = data.x.to - data.x.from;
+		axis.x.irange = data.x.ito - data.x.ifrom;
+		axis.x.interval_width = main.width / axis.x.irange;
+		axis.x.delta = Math.floor(axis.x.range / axis.x.interval / axis.x.count);
+
+		console.log('axis.x.count - '+axis.x.count);
+		console.log('axis.x.range - '+axis.x.range);
+		console.log('axis.x.irange - '+axis.x.irange);
+		console.log('axis.x.interval - '+axis.x.interval);
+		console.log('axis.x.delta - '+axis.x.delta);
+		console.log('axis.x.interval_width - '+axis.x.interval_width);
+	}
+
+	function calcAxisY(){
+		console.log('>calcAxisY');
+		axis.y.count = Math.max(1, Math.floor(main.height / axis.y.height));
 		axis.y.delta = Math.round(axis.y.max / axis.y.count);
-		console.log(axis.x.delta);
+	}
+
+	function setXFromTo(_from, _to) {
+
+		if (!_from) _from = 1;
+		var minmax = utl.minmaxedge(data.x.data, _from, _to);
+
+		data.x.from = minmax.min;
+		data.x.ifrom = minmax.imin;
+		data.x.to = minmax.max;
+		data.x.ito = minmax.imax;
 
 	}
-	// \render
 
-
-
+	// \calculation
 
 
 	// exe

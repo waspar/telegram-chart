@@ -311,6 +311,7 @@ function TelegramChart(_container, _data, _options) {
 				case (axis.x.name === column_name):
 					column = {
 						name: column_name,
+						display: true,
 						data: charts.columns[c],
 						length: charts.columns[c].length - 1,
 						type: charts.types[column_name],
@@ -325,6 +326,7 @@ function TelegramChart(_container, _data, _options) {
 					column = {
 						code: column_name,
 						name: charts.names[column_name],
+						display: true,
 						data: charts.columns[c],
 						type: charts.types[column_name],
 						length: charts.columns[c].length - 1,
@@ -418,13 +420,39 @@ function TelegramChart(_container, _data, _options) {
 	function renderMain() {
 		ctx.clearRect(main.rect[0], main.rect[1], main.rect[2], main.rect[3]);
 		renderGrid();
+		renderPaths();
 	}
 
 	function renderGrid() {
 
+		calcAxisX();
+		calcAxisY();
+
 		renderLinesY();
-		renderTextY();
+
 		renderTextX();
+		renderTextY();
+
+	}
+
+	function renderPaths() {
+
+		for(var i in data.y){
+			renderPath(data.y[i]);
+		}
+
+	}
+	
+	function renderPath(_path) {
+		ctx.strokeStyle = _path.color;
+		ctx.beginPath();
+		ctx.lineJoin = 'bevel';
+		ctx.lineCap = 'butt';
+
+		console.log(axis.y);
+		//var x = data.x[data.x.ifrom];
+		//var y = data.x[data.y.ifrom];
+		//context.moveTo(firstX * scaleX + offsetX, firstY * scaleY + offsetY);
 
 	}
 
@@ -449,15 +477,15 @@ function TelegramChart(_container, _data, _options) {
 
 	function renderTextY() {
 		console.log('>renderTextY');
-		calcAxisY();
+
+		ctx.fillStyle = theme.text;
+		ctx.font = main.font + 'px ' + main.font_family;
 
 		for (var i = 0; i < axis.y.count; i++) {
 
 			var y = main.height - (axis.y.height * i) + axis.y.marginv;
 			var text = axis.y.min + axis.y.delta * i;
 
-			ctx.fillStyle = theme.text;
-			ctx.font = main.font + 'px ' + main.font_family;
 			ctx.fillText(utl.compressNumber(text, true), 0, y);
 
 		}
@@ -467,10 +495,12 @@ function TelegramChart(_container, _data, _options) {
 	function renderTextX() {
 		console.log('>renderTextX');
 		var verbose = false;
-		calcAxisX();
-
 		var count = 0;
 		var offset = main.width;
+
+		ctx.fillStyle = theme.text;
+		ctx.font = main.font + 'px ' + main.font_family;
+
 		for (var i = data.x.ito; i >= data.x.ifrom; i -= axis.x.delta) {
 			var value = data.x.data[i];
 			if(!value) continue;
@@ -556,6 +586,13 @@ function TelegramChart(_container, _data, _options) {
 		console.log('>calcAxisY');
 		axis.y.count = Math.max(1, Math.floor(main.height / axis.y.height));
 		axis.y.delta = Math.round(axis.y.max / axis.y.count);
+
+		for(var i in data.y){
+			if(data.y[i].display){
+				data.y.minmax = utl.minmax(data.y[i].data, data.x.ifrom, data.x.ito);
+			}
+		}
+
 	}
 
 	function setXFromTo(_from, _to) {

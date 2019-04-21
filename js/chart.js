@@ -225,7 +225,7 @@ function TelegramChart(_container, _data, _options) {
 	var main = {
 		height: 0,
 		width: 0,
-		line: 1 * s.ratio,
+		line: 2 * s.ratio,
 		line_height: 45 * s.ratio,
 		circle: 3 * s.ratio,
 		font: 10 * s.ratio,
@@ -259,7 +259,7 @@ function TelegramChart(_container, _data, _options) {
 			count: 6,
 			names: [],
 			types: [],
-			min: 0,
+			min: Number.MAX_VALUE,
 			max: Number.MIN_VALUE
 		}
 	};
@@ -436,23 +436,47 @@ function TelegramChart(_container, _data, _options) {
 	}
 
 	function renderPaths() {
+		console.log('>renderPaths');
+
+		ctx.globalAlpha = 1;
+		ctx.lineWidth = main.line;
 
 		for(var i in data.y){
 			renderPath(data.y[i]);
 		}
 
 	}
-	
+
 	function renderPath(_path) {
+		console.log('> > renderPath');
+		console.log(_path);
+
 		ctx.strokeStyle = _path.color;
 		ctx.beginPath();
 		ctx.lineJoin = 'bevel';
 		ctx.lineCap = 'butt';
 
-		console.log(axis.y);
-		//var x = data.x[data.x.ifrom];
-		//var y = data.x[data.y.ifrom];
-		//context.moveTo(firstX * scaleX + offsetX, firstY * scaleY + offsetY);
+		var vx = data.x.data[data.x.ifrom];
+		var vy = _path.data[data.x.ifrom];
+		var x = 0;
+		var y = Math.round(main.height - (axis.y.interval_height * vy));
+		ctx.moveTo(x, y); // start
+
+		console.log(main);
+		var count = 1;
+		for(var i = data.x.ifrom + 1; i <= data.x.ito; i++){
+			vx = data.x.data[i];
+			vy = _path.data[i];
+
+			//x = x + axis.x.interval_width;
+			//y = main.height - (axis.y.interval_height * vy);
+
+			x = Math.floor(axis.x.interval_width * count);
+			y = Math.floor(main.height - (axis.y.interval_height * vy));
+			ctx.lineTo(x, y);
+			count++;
+		}
+		ctx.stroke();
 
 	}
 
@@ -484,8 +508,7 @@ function TelegramChart(_container, _data, _options) {
 		for (var i = 0; i < axis.y.count; i++) {
 
 			var y = main.height - (axis.y.height * i) + axis.y.marginv;
-			var text = axis.y.min + axis.y.delta * i;
-
+			var text = axis.y.delta * i;
 			ctx.fillText(utl.compressNumber(text, true), 0, y);
 
 		}
@@ -545,7 +568,7 @@ function TelegramChart(_container, _data, _options) {
 	// calculation
 	function calc() { // - common data calculation without limits (from/to)
 
-		main.height = canvas.height - preview.height - preview.mt;
+		main.height = Math.round(canvas.height - preview.height - preview.mt);
 		main.width = preview.width = canvas.width;
 
 		main.rect = [
@@ -574,25 +597,24 @@ function TelegramChart(_container, _data, _options) {
 		axis.x.interval_width = main.width / axis.x.irange;
 		axis.x.delta = Math.floor(axis.x.range / axis.x.interval / axis.x.count);
 
-		console.log('axis.x.count - '+axis.x.count);
-		console.log('axis.x.range - '+axis.x.range);
-		console.log('axis.x.irange - '+axis.x.irange);
-		console.log('axis.x.interval - '+axis.x.interval);
-		console.log('axis.x.delta - '+axis.x.delta);
-		console.log('axis.x.interval_width - '+axis.x.interval_width);
+		//console.log('axis.x.count - '+axis.x.count);
+		//console.log('axis.x.range - '+axis.x.range);
+		//console.log('axis.x.irange - '+axis.x.irange);
+		//console.log('axis.x.interval - '+axis.x.interval);
+		//console.log('axis.x.delta - '+axis.x.delta);
+		//console.log('axis.x.interval_width - '+axis.x.interval_width);
 	}
 
 	function calcAxisY(){
 		console.log('>calcAxisY');
+		setYFromTo();
 		axis.y.count = Math.max(1, Math.floor(main.height / axis.y.height));
-		axis.y.delta = Math.round(axis.y.max / axis.y.count);
+		axis.y.delta = Math.round(axis.y.to / axis.y.count);
+		axis.y.interval_height = main.height / (axis.y.delta * axis.y.count);
 
-		for(var i in data.y){
-			if(data.y[i].display){
-				data.y.minmax = utl.minmax(data.y[i].data, data.x.ifrom, data.x.ito);
-			}
-		}
-
+		//console.log('axis.y.count - '+axis.y.count);
+		//console.log('axis.y.delta - '+axis.y.delta);
+		//console.log('axis.y.interval_height - '+axis.y.interval_height);
 	}
 
 	function setXFromTo(_from, _to) {
@@ -604,6 +626,21 @@ function TelegramChart(_container, _data, _options) {
 		data.x.ifrom = minmax.imin;
 		data.x.to = minmax.max;
 		data.x.ito = minmax.imax;
+
+	}
+
+	function setYFromTo() {
+
+		axis.y.from = axis.y.min + 0;
+		axis.y.to = axis.y.max + 0;
+
+		for(var i in data.y){
+			if(data.y[i].display){
+				var minmax = utl.minmax(data.y[i].data, data.x.ifrom, data.x.ito);
+				if (axis.y.from > minmax.min) axis.y.from = minmax.min;
+				if (axis.y.to < minmax.max) axis.y.to = minmax.max;
+			}
+		}
 
 	}
 

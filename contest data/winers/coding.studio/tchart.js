@@ -379,12 +379,20 @@ function TChart(container) {
         mainRangeX = mainMaxX - mainMinX;
         mainScaleX = (width - paddingHor * 2) / mainRangeX;
         mainOffsetX = -mainMinX * mainScaleX + paddingHor;
+        console.log('mainRangeX - '+mainRangeX);
+        console.log('mainScaleX - '+mainScaleX);
+        console.log('mainOffsetX - '+mainOffsetX);
+        console.log('paddingHor - '+paddingHor);
 
         var delta = mainRangeX / intervalX / textCountX;
+        console.log('intervalX - '+intervalX);
+        console.log('textCountX - '+textCountX);
+        console.log('delta - '+delta);
 
         var pow = 1;
         while (pow <= delta) pow *= 2;
         delta = pow;
+        console.log('delta pow - '+delta);
 
         if (delta < newTextX.delta) { // add dates
             oldTextX.delta = newTextX.delta;
@@ -533,7 +541,6 @@ function TChart(container) {
         if (width !== newWidth || height !== newHeight) {
             width = newWidth;
             height = newHeight;
-            console.log(height);
             mainHeight = height - previewHeight - previewMarginTop;
             textCountX = Math.max(1, Math.floor(width / (textXWidth * 2)));
             textCountY = Math.max(1, Math.floor(mainHeight / textYHeight));
@@ -800,6 +807,7 @@ function TChart(container) {
 
         context.fillStyle = colors.text;
         context.font = font;
+        console.log(oldTextX.delta , newTextX.delta);
         var skipStepNew = oldTextX.delta > newTextX.delta;
         renderTextsX(oldTextX, !skipStepNew);
         renderTextsX(newTextX, skipStepNew);

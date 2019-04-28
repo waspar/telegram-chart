@@ -235,8 +235,9 @@ function TelegramChart(_container, _data, _options) {
 	// preview params
 	var preview = {
 		height: 38 * s.ratio,
-		mt: 32 * s.ratio,
 		width: 0, // calc
+		line: 1 * s.ratio,
+		mt: 32 * s.ratio,
 		sensitivity: 20 * s.ratio
 	};
 
@@ -410,20 +411,25 @@ function TelegramChart(_container, _data, _options) {
 		requestAnimationFrame(render);
 	}
 
-	function renderPreview() {
-		ctx.clearRect(preview.rect[0], preview.rect[1], preview.rect[2], preview.rect[3]);
-		// TODO - tmp
-		ctx.fillStyle = '#d903ff';
-		ctx.fillRect(preview.rect[0], preview.rect[1], preview.rect[2], preview.rect[3]);
-	}
-
 	function renderMain() {
 		ctx.clearRect(main.rect[0], main.rect[1], main.rect[2], main.rect[3]);
 		renderGrid();
-		renderPaths();
+		renderPaths(main, 1, main.rect);
 	}
 
-	function renderGrid() {
+	function renderPreview() {
+		ctx.clearRect(preview.rect[0], preview.rect[1], preview.rect[2], preview.rect[3]);
+
+		// TODO #tmp
+		//ctx.fillStyle = '#d903ff';
+		//ctx.fillRect(preview.rect[0], preview.rect[1], preview.rect[2], preview.rect[3]);
+
+		//renderPreviewRange();
+
+		renderPaths(preview, preview.rect[3] / main.rect[3], preview.rect);
+	}
+
+	function renderGrid(){
 
 		calcAxisX();
 		calcAxisY();
@@ -435,19 +441,21 @@ function TelegramChart(_container, _data, _options) {
 
 	}
 
-	function renderPaths() {
+	function renderPaths(options, scale, rect) {
 		console.log('>renderPaths');
+		console.log('scale - '+scale);
+		console.log('rect - '+rect);
 
 		ctx.globalAlpha = 1;
-		ctx.lineWidth = main.line;
+		ctx.lineWidth = options.line;
 
 		for(var i in data.y){
-			renderPath(data.y[i]);
+			renderPath(data.y[i], scale, rect);
 		}
 
 	}
 
-	function renderPath(_path) {
+	function renderPath(_path, scale, rect) {
 		console.log('> > renderPath');
 		console.log(_path);
 
@@ -458,21 +466,19 @@ function TelegramChart(_container, _data, _options) {
 
 		var vx = data.x.data[data.x.ifrom];
 		var vy = _path.data[data.x.ifrom];
-		var x = 0;
-		var y = Math.round(main.height - (axis.y.interval_height * vy));
+		var yih = axis.y.interval_height * scale;
+		var xiw = axis.x.interval_width;
+		var x = rect[0];
+		var y = Math.round(rect[3] + rect[1] - (yih * vy));  // rect[3] - main.height || preview.height
+
 		ctx.moveTo(x, y); // start
 
-		console.log(main);
 		var count = 1;
 		for(var i = data.x.ifrom + 1; i <= data.x.ito; i++){
 			vx = data.x.data[i];
 			vy = _path.data[i];
-
-			//x = x + axis.x.interval_width;
-			//y = main.height - (axis.y.interval_height * vy);
-
-			x = Math.floor(axis.x.interval_width * count);
-			y = Math.floor(main.height - (axis.y.interval_height * vy));
+			x = Math.floor(xiw * count);
+			y = Math.floor(rect[3] + rect[1] - (yih * vy));
 			ctx.lineTo(x, y);
 			count++;
 		}
@@ -596,13 +602,6 @@ function TelegramChart(_container, _data, _options) {
 		axis.x.irange = data.x.ito - data.x.ifrom;
 		axis.x.interval_width = main.width / axis.x.irange;
 		axis.x.delta = Math.floor(axis.x.range / axis.x.interval / axis.x.count);
-
-		//console.log('axis.x.count - '+axis.x.count);
-		//console.log('axis.x.range - '+axis.x.range);
-		//console.log('axis.x.irange - '+axis.x.irange);
-		//console.log('axis.x.interval - '+axis.x.interval);
-		//console.log('axis.x.delta - '+axis.x.delta);
-		//console.log('axis.x.interval_width - '+axis.x.interval_width);
 	}
 
 	function calcAxisY(){
@@ -611,10 +610,6 @@ function TelegramChart(_container, _data, _options) {
 		axis.y.count = Math.max(1, Math.floor(main.height / axis.y.height));
 		axis.y.delta = Math.round(axis.y.to / axis.y.count);
 		axis.y.interval_height = main.height / (axis.y.delta * axis.y.count);
-
-		//console.log('axis.y.count - '+axis.y.count);
-		//console.log('axis.y.delta - '+axis.y.delta);
-		//console.log('axis.y.interval_height - '+axis.y.interval_height);
 	}
 
 	function setXFromTo(_from, _to) {
